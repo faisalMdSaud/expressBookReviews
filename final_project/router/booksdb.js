@@ -5,7 +5,7 @@ let books = {
     isbn: "9780385474542",
     reviews: {
       alice: "A powerful novel about tradition and change.",
-      bob: "Excellent storytelling and memorable characters.",
+      ahmed: "Excellent storytelling and memorable characters.",
     },
   },
   2: {
@@ -83,4 +83,11 @@ let books = {
   },
 };
 
-module.exports = books;
+books = Object.values(books);
+
+const getBookWithIsbn = (isbn) => {
+  return books.find((book) => book.isbn === isbn);
+};
+
+module.exports.books = books;
+module.exports.getBookWithIsbn = getBookWithIsbn;

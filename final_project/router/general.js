@@ -1,11 +1,10 @@
 const express = require("express");
-let books = require("./booksdb.js");
+let books = require("./booksdb.js").books;
+let getBookWithIsbn = require("./booksdb.js").getBookWithIsbn;
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 const { body, validationResult } = require("express-validator");
-
-books = Object.values(books);
 
 const validateUserData = [
   body("firstName")
@@ -131,7 +130,7 @@ public_users.get("/title/:title", async function (req, res) {
 //  Get book review
 public_users.get("/review/:isbn", async function (req, res) {
   const isbn = req.params.isbn;
-  const filteredBook = await books.find((book) => book.isbn === isbn);
+  const filteredBook = await getBookWithIsbn(isbn);
   if (Object.keys(filteredBook?.reviews).length === 0)
     return res
       .status(400)

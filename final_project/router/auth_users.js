@@ -1,8 +1,9 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-let books = require("./booksdb.js");
+let getBookWithIsbn = require("./booksdb.js").getBookWithIsbn;
 const regd_users = express.Router();
 const { body, validationResult } = require("express-validator");
+const { books } = require("./booksdb.js");
 
 let users = [
   {
@@ -20,12 +21,7 @@ const isValid = (username) => {
 };
 
 const authenticatedUser = (username, password) => {
-  //returns boolean
-  //write code to check if username and password match the one we have in records.
-
-  console.log(username, password);
-
-  return users.some(
+  return users.find(
     (user) => user.username === username && user.password === password,
   );
 };
@@ -35,7 +31,6 @@ const validateLoginInputs = [
   body("password").trim().notEmpty().withMessage("Password is required"),
 ];
 
-//only registered users can login
 regd_users.post("/login", validateLoginInputs, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty())
@@ -43,30 +38,99 @@ regd_users.post("/login", validateLoginInputs, async (req, res) => {
 
   const { username, password } = req.body;
 
-  if (!authenticatedUser(username, password))
+  const user = authenticatedUser(username, password);
+  if (!user)
     return res
       .status(400)
       .json({ message: "Unable to login with invalid credentials" });
 
-  const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: "1h" });
+  let accessToken = jwt.sign(
+    {
+      username: user.username,
+    },
+    SECRET_KEY,
+    { expiresIn: 60 * 60 * 60 },
+  );
 
-  req.session.token = token;
-  req.session.username = username;
+  req.session.authorization = {
+    accessToken,
+  };
 
   return res.status(200).json({
     message: "Login successful",
-    token: token,
+    token: accessToken,
   });
-
-  return res.status(300).json({ message: "Yet to be implemented yiu" });
 });
+
+const reviewValidation = [
+  body("review")
+    .trim()
+    .notEmpty()
+    .withMessage("Review is required")
+    .isLength({ min: 10 })
+    .withMessage("Review must be at least 10 characters"),
+];
 
 // Add a book review
-regd_users.put("/auth/review/:isbn", async (req, res) => {
-  //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+regd_users.put("/auth/review/:isbn", reviewValidation, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(400).json({ errors: JSON.stringify(errors.array()) });
+
+  const isbn = req.params.isbn;
+  const book = await getBookWithIsbn(isbn);
+  if (!book) {
+    return res.status(404).json({ message: "Book not found" });
+  }
+  const userName = req.userInfo?.username;
+
+  if (!userName) {
+    return res.status(401).json({ message: "Unauthorized user" });
+  }
+  if (!book?.reviews?.userName) book.reviews[userName] = req.body.review;
+
+  const otherBooks = books.filter((book) => book.isbn !== isbn);
+  otherBooks.push(book);
+
+  return res
+    .status(300)
+    .json({ message: "Review has been added to the book", book: book });
 });
 
+// Delete book review
+regd_users.delete("/auth/review/:isbn", async (req, res) => {
+  try {
+    const isbn = req.params.isbn;
+    const userName = req.userInfo?.username; // from auth middleware
+
+    if (!userName) {
+      return res.status(401).json({ message: "Unauthorized user" });
+    }
+
+    const book = await getBookWithIsbn(isbn);
+
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    // delete review for this user
+    if (book.reviews && book.reviews[userName]) {
+      delete book.reviews[userName];
+    } else {
+      return res.status(404).json({ message: "Review not found for user" });
+    }
+
+    return res.status(200).json({
+      message: "Review has been deleted successfully",
+      book: book,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;

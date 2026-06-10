@@ -25,7 +25,7 @@ let books = {
     },
   },
   4: {
-    author: "Unknown",
+    author: "Dante Alighieri",
     title: "The Epic Of Gilgamesh",
     isbn: "9780141026282",
     reviews: {
@@ -33,7 +33,7 @@ let books = {
     },
   },
   5: {
-    author: "Unknown",
+    author: "Robert Alvee",
     title: "The Book Of Job",
     isbn: "9780393350197",
     reviews: {
@@ -41,7 +41,7 @@ let books = {
     },
   },
   6: {
-    author: "Unknown",
+    author: "Chomson Tack",
     title: "One Thousand and One Nights",
     isbn: "9780140449389",
     reviews: {
@@ -49,7 +49,7 @@ let books = {
     },
   },
   7: {
-    author: "Unknown",
+    author: "Ahmed Didar",
     title: "Njál's Saga",
     isbn: "9780140447699",
     reviews: {

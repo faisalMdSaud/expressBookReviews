@@ -1,3 +1,4 @@
+const { default: axios } = require("axios");
 const express = require("express");
 let books = require("./booksdb.js").books;
 let getBookWithIsbn = require("./booksdb.js").getBookWithIsbn;
@@ -5,6 +6,7 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 const { body, validationResult } = require("express-validator");
+const URL = "http://localhost:5000";
 
 const validateUserData = [
   body("firstName")
@@ -51,95 +53,239 @@ const validateUserData = [
 ];
 
 public_users.post("/register", validateUserData, async (req, res) => {
-  const errors = validationResult(req);
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: JSON.stringify(errors.array()) });
+    }
 
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: JSON.stringify(errors.array()) });
-  }
+    if (!isValid(req.body.username))
+      return res.status(400).json({
+        message: `User already exist with username: ${req.body.username}`,
+      });
 
-  if (!isValid(req.body.username))
-    return res.status(400).json({
-      message: `User already exist with username: ${req.body.username}`,
+    await users.push(req.body);
+
+    return res.status(300).json({
+      message: `User registration has been successful for user: ${req.body.username}`,
     });
-
-  await users.push(req.body);
-
-  return res.status(300).json({
-    message: `User registration has been successful for user: ${req.body.username}`,
-  });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 // Get the book list available in the shop
 public_users.get("/", async function (req, res) {
-  return res.status(300).json({
-    message: "Books have been fetched successfully",
-    books: JSON.stringify(books),
-  });
+  try {
+    let books = await require("./booksdb.js").books;
+    if (!books[0])
+      return res.status(400).json({ message: `Not found any books` });
+
+    return res.status(200).json({
+      message: "Books have been fetched successfully",
+      books,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 // Get book details based on ISBN
 public_users.get("/isbn/:isbn", async function (req, res) {
-  const isbn = req.params.isbn;
-  const filteredBook = await books.filter((book) => book.isbn === isbn);
-  if (!filteredBook[0])
-    return res
-      .status(400)
-      .json({ message: `Not found any book with isbn: ${isbn} ` });
+  const { isbn } = req.params;
+  try {
+    const filteredBook = await books.filter((book) => book.isbn === isbn);
+    if (!filteredBook[0])
+      return res
+        .status(400)
+        .json({ message: `Not found any book with isbn: ${isbn} ` });
 
-  return res.status(300).json({
-    message: `Book has been filtered with isbn: ${isbn}`,
-    bookDetails: JSON.stringify(filteredBook),
-  });
+    return res.status(200).json({
+      message: `Book has been filtered with isbn: ${isbn}`,
+      bookDetails: filteredBook,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 // Get book details based on author
 public_users.get("/author/:author", async function (req, res) {
   //Write your code here
-  const author = req.params.author;
-  const filteredBook = await books.filter(
-    (book) => book.author.toLowerCase() === author.toLowerCase(),
-  );
-  if (!filteredBook[0])
-    return res
-      .status(400)
-      .json({ message: `Not found any book with author: ${author} ` });
+  const { author } = req.params;
+  try {
+    const filteredBook = await books.filter(
+      (book) => book.author.toLowerCase() === author.toLowerCase(),
+    );
+    if (!filteredBook[0])
+      return res
+        .status(400)
+        .json({ message: `Not found any book with author: ${author} ` });
 
-  return res.status(300).json({
-    message: `Books have been filtered with author: ${author}`,
-    bookDetails: JSON.stringify(filteredBook),
-  });
+    return res.status(200).json({
+      message: `Books have been filtered with author: ${author}`,
+      bookDetails: filteredBook,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 // Get all books based on title
 public_users.get("/title/:title", async function (req, res) {
-  const title = req.params.title;
-  const filteredBook = await books.filter(
-    (book) => book.title.toLowerCase() === title.toLowerCase(),
-  );
-  if (!filteredBook[0])
-    return res
-      .status(400)
-      .json({ message: `Not found any book with title: ${title} ` });
+  const { title } = req.params;
+  try {
+    const filteredBook = await books.filter(
+      (book) => book.title.toLowerCase() === title.toLowerCase(),
+    );
+    if (!filteredBook[0])
+      return res
+        .status(400)
+        .json({ message: `Not found any book with title: ${title} ` });
 
-  return res.status(300).json({
-    message: `Books have been filtered with title: ${title}`,
-    bookDetails: JSON.stringify(filteredBook),
-  });
+    return res.status(200).json({
+      message: `Books have been filtered with title: ${title}`,
+      bookDetails: filteredBook,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 //  Get book review
 public_users.get("/review/:isbn", async function (req, res) {
-  const isbn = req.params.isbn;
-  const filteredBook = await getBookWithIsbn(isbn);
-  if (Object.keys(filteredBook?.reviews).length === 0)
-    return res
-      .status(400)
-      .json({ message: `Not found any book's review with isbn: ${isbn} ` });
+  const { isbn } = req.params;
 
-  return res.status(300).json({
-    message: `Book's review has been filtered with isbn: ${isbn}`,
-    reviews: JSON.stringify(filteredBook?.reviews),
-  });
+  try {
+    const filteredBook = await getBookWithIsbn(isbn);
+    if (Object.keys(filteredBook?.reviews).length === 0)
+      return res
+        .status(400)
+        .json({ message: `Not found any book's review with isbn: ${isbn} ` });
+
+    return res.status(200).json({
+      message: `Book's review of isbn: ${isbn}`,
+      reviews: filteredBook?.reviews,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+
+//for axios async/await TAsk 10-13
+
+// Get the book list available in the shop
+public_users.get("/promise", async function (req, res) {
+  try {
+    let books = await axios.get(`${URL}`);
+
+    books = books?.data?.books;
+
+    if (!books[0])
+      return res.status(400).json({ message: `Not found any books` });
+
+    return res.status(200).json({
+      message: "Books have been fetched successfully",
+      books,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+
+// Get book details based on ISBN with promise
+public_users.get("/promise/isbn/:isbn", async function (req, res) {
+  const { isbn } = req.params;
+  try {
+    let filteredBook = await axios.get(`${URL}/isbn/${isbn}`);
+
+    filteredBook = filteredBook?.data?.bookDetails;
+
+    if (!filteredBook[0])
+      return res
+        .status(400)
+        .json({ message: `Not found any book with isbn: ${isbn} ` });
+
+    return res.status(200).json({
+      message: `Book has been filtered with isbn: ${isbn}`,
+      bookDetails: filteredBook,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+
+// Get book details based on author
+public_users.get("/promise/author/:author", async function (req, res) {
+  //Write your code here
+  const { author } = req.params;
+  try {
+    let filteredBook = await axios.get(`${URL}/author/${author}`);
+
+    filteredBook = filteredBook?.data?.bookDetails;
+    if (!filteredBook[0])
+      return res
+        .status(400)
+        .json({ message: `Not found any book with author: ${author} ` });
+
+    return res.status(200).json({
+      message: `Books have been filtered with author: ${author}`,
+      bookDetails: filteredBook,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+
+// Get all books based on title
+public_users.get("/promise/title/:title", async function (req, res) {
+  const { title } = req.params;
+  try {
+    let filteredBook = await axios.get(`${URL}/title/${title}`);
+    filteredBook = filteredBook?.data?.bookDetails;
+
+    if (!filteredBook[0])
+      return res
+        .status(400)
+        .json({ message: `Not found any book with title: ${title} ` });
+
+    return res.status(200).json({
+      message: `Books have been filtered with title: ${title}`,
+      bookDetails: filteredBook,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 module.exports.general = public_users;

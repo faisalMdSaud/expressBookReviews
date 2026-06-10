@@ -13,11 +13,18 @@ let users = [
     username: "ahmed",
     password: "123456",
   },
+  {
+    firstName: "Harun",
+    lastName: "Bashar",
+    dob: "1995-08-01",
+    username: "harun",
+    password: "123456",
+  },
 ];
 const SECRET_KEY = "hello this is my secret key for jwt";
 
 const isValid = (username) => {
-  return users.some((user) => user.username == username);
+  return !users.find((user) => user.username == username);
 };
 
 const authenticatedUser = (username, password) => {
@@ -32,34 +39,41 @@ const validateLoginInputs = [
 ];
 
 regd_users.post("/login", validateLoginInputs, async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty())
-    return res.status(400).json({ errors: JSON.stringify(errors.array()) });
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: JSON.stringify(errors.array()) });
 
-  const { username, password } = req.body;
+    const { username, password } = req.body;
+    const user = authenticatedUser(username, password);
 
-  const user = authenticatedUser(username, password);
-  if (!user)
-    return res
-      .status(400)
-      .json({ message: "Unable to login with invalid credentials" });
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "Unable to login with invalid credentials" });
 
-  let accessToken = jwt.sign(
-    {
-      username: user.username,
-    },
-    SECRET_KEY,
-    { expiresIn: 60 * 60 * 60 },
-  );
+    let accessToken = jwt.sign(
+      {
+        username: user.username,
+      },
+      SECRET_KEY,
+      { expiresIn: 60 * 60 },
+    );
 
-  req.session.authorization = {
-    accessToken,
-  };
+    req.session.authorization = {
+      accessToken,
+    };
 
-  return res.status(200).json({
-    message: "Login successful",
-    token: accessToken,
-  });
+    return res.status(200).json({
+      message: "Login successful",
+      token: accessToken,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
 });
 
 const reviewValidation = [
@@ -72,29 +86,38 @@ const reviewValidation = [
 ];
 
 // Add a book review
-regd_users.put("/auth/review/:isbn", reviewValidation, async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty())
-    return res.status(400).json({ errors: JSON.stringify(errors.array()) });
+regd_users.put("/auth/review/:isbn", async (req, res) => {
+  const { isbn } = req.params;
+  const { review } = req.query;
+  try {
+    if (!review) return res.status(400).json({ message: "review is required" });
 
-  const isbn = req.params.isbn;
-  const book = await getBookWithIsbn(isbn);
-  if (!book) {
-    return res.status(404).json({ message: "Book not found" });
+    const book = await getBookWithIsbn(isbn);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+    const userName = req.userInfo?.username;
+
+    if (!userName) {
+      return res.status(401).json({ message: "Unauthorized user" });
+    }
+
+    let message = !book.reviews[userName]
+      ? "Book Review has been added"
+      : "Book Review has been updated";
+
+    book.reviews[userName] = review;
+
+    const otherBooks = books.filter((book) => book.isbn !== isbn);
+    otherBooks.push(book);
+
+    return res.status(300).json({ message: message, book: book });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
-  const userName = req.userInfo?.username;
-
-  if (!userName) {
-    return res.status(401).json({ message: "Unauthorized user" });
-  }
-  if (!book?.reviews?.userName) book.reviews[userName] = req.body.review;
-
-  const otherBooks = books.filter((book) => book.isbn !== isbn);
-  otherBooks.push(book);
-
-  return res
-    .status(300)
-    .json({ message: "Review has been added to the book", book: book });
 });
 
 // Delete book review
@@ -121,8 +144,7 @@ regd_users.delete("/auth/review/:isbn", async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Review has been deleted successfully",
-      book: book,
+      message: `Review for ISBN ${isbn} deleted`,
     });
   } catch (error) {
     return res.status(500).json({

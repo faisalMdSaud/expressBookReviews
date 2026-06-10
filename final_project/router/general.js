@@ -6,7 +6,8 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 const { body, validationResult } = require("express-validator");
-const URL = "http://localhost:5000";
+const URL = "http://localhost:5000/async";
+const booksArray = Object.values(books);
 
 const validateUserData = [
   body("firstName")
@@ -80,11 +81,12 @@ public_users.post("/register", validateUserData, async (req, res) => {
 // Get the book list available in the shop
 public_users.get("/", async function (req, res) {
   try {
-    let books = await require("./booksdb.js").books;
-    if (!books[0])
-      return res.status(400).json({ message: `Not found any books` });
+    // let books = await require("./booksdb.js").books;
+    let books = await axios.get(`${URL}/title/${title}`);
+    // if (!books[0])
+    //   return res.status(400).json({ message: `Not found any books` });
 
-    return res.status(200).json(books);
+    return res.status(200).json(JSON.stringify(books));
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -97,11 +99,12 @@ public_users.get("/", async function (req, res) {
 public_users.get("/isbn/:isbn", async function (req, res) {
   const { isbn } = req.params;
   try {
-    const filteredBook = await books.filter((book) => book.isbn === isbn);
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with isbn: ${isbn} ` });
+    const filteredBook = await axios.get(`${URL}/isbn/${isbn}`);
+    //  const filteredBook = await booksArray.filter((book) => book.isbn === isbn);
+    // if (!filteredBook[0])
+    //   return res
+    //     .status(400)
+    //     .json({ message: `Not found any book with isbn: ${isbn} ` });
 
     return res.status(200).json(filteredBook);
   } catch (error) {
@@ -117,9 +120,11 @@ public_users.get("/author/:author", async function (req, res) {
   //Write your code here
   const { author } = req.params;
   try {
-    const filteredBook = await books.filter(
-      (book) => book.author.toLowerCase() === author.toLowerCase(),
-    );
+    const filteredBook = await axios.get(`${URL}/isbn/${author}`);
+
+    // const filteredBook = await booksArray.filter(
+    //   (book) => book.author.toLowerCase() === author.toLowerCase(),
+    // );
     if (!filteredBook[0])
       return res
         .status(400)
@@ -138,9 +143,10 @@ public_users.get("/author/:author", async function (req, res) {
 public_users.get("/title/:title", async function (req, res) {
   const { title } = req.params;
   try {
-    const filteredBook = await books.filter(
-      (book) => book.title.toLowerCase() === title.toLowerCase(),
-    );
+    const filteredBook = await axios.get(`${URL}/isbn/${title}`);
+    // const filteredBook = await booksArray.filter(
+    //   (book) => book.title.toLowerCase() === title.toLowerCase(),
+    // );
     if (!filteredBook[0])
       return res
         .status(400)
@@ -166,7 +172,9 @@ public_users.get("/review/:isbn", async function (req, res) {
         .status(400)
         .json({ message: `Not found any book's review with isbn: ${isbn} ` });
 
-    return res.status(200).json(filteredBook.reviews);
+    const firstReview = Object.values(filteredBook.reviews)[0];
+
+    return res.status(200).json(firstReview);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",

@@ -102,14 +102,25 @@ regd_users.put("/auth/review/:isbn", async (req, res) => {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
-    book.reviews[userName] = review;
+    let reviews = book?.reviews || [];
+    let existUserReview = book.reviews.find((r) => r.reviewer === userName);
 
-    const otherBooks = books.filter((book) => book.isbn !== isbn);
-    otherBooks.push(book);
+    if (existUserReview) {
+      reviews = reviews.filter((r) => r.reviewer !== userName);
+    }
 
-    return res
-      .status(300)
-      .json({ message: "Review added/updated successfully" });
+    existUserReview = { reviewer: userName, review: review };
+
+    reviews.push(existUserReview);
+    book.reviews = reviews;
+
+    let otherBooks = await books.filter((book) => book.isbn !== isbn);
+    await otherBooks.push(book);
+
+    return res.status(300).json({
+      message: "Review added/updated successfully",
+      reviews: book.reviews,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -135,14 +146,15 @@ regd_users.delete("/auth/review/:isbn", async (req, res) => {
     }
 
     // delete review for this user
-    if (book.reviews && book.reviews[userName]) {
-      delete book.reviews[userName];
+    if (book.reviews[0]) {
+      book.reviews = book.reviews.filter((r) => r.reviewer !== userName);
     } else {
       return res.status(404).json({ message: "Review not found for user" });
     }
 
     return res.status(200).json({
       message: `Review for ISBN ${isbn} deleted`,
+      reviews: book.reviews,
     });
   } catch (error) {
     return res.status(500).json({

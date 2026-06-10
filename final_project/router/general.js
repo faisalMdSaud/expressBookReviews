@@ -84,10 +84,7 @@ public_users.get("/", async function (req, res) {
     if (!books[0])
       return res.status(400).json({ message: `Not found any books` });
 
-    return res.status(200).json({
-      message: "Books have been fetched successfully",
-      books,
-    });
+    return res.status(200).json(books);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -106,10 +103,7 @@ public_users.get("/isbn/:isbn", async function (req, res) {
         .status(400)
         .json({ message: `Not found any book with isbn: ${isbn} ` });
 
-    return res.status(200).json({
-      message: `Book has been filtered with isbn: ${isbn}`,
-      bookDetails: filteredBook,
-    });
+    return res.status(200).json(filteredBook);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -131,10 +125,7 @@ public_users.get("/author/:author", async function (req, res) {
         .status(400)
         .json({ message: `Not found any book with author: ${author} ` });
 
-    return res.status(200).json({
-      message: `Books have been filtered with author: ${author}`,
-      bookDetails: filteredBook,
-    });
+    return res.status(200).json(filteredBook);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -155,10 +146,7 @@ public_users.get("/title/:title", async function (req, res) {
         .status(400)
         .json({ message: `Not found any book with title: ${title} ` });
 
-    return res.status(200).json({
-      message: `Books have been filtered with title: ${title}`,
-      bookDetails: filteredBook,
-    });
+    return res.status(200).json(filteredBook);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -178,10 +166,7 @@ public_users.get("/review/:isbn", async function (req, res) {
         .status(400)
         .json({ message: `Not found any book's review with isbn: ${isbn} ` });
 
-    return res.status(200).json({
-      message: `Book's review of isbn: ${isbn}`,
-      reviews: filteredBook?.reviews,
-    });
+    return res.status(200).json(filteredBook.reviews);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -192,20 +177,11 @@ public_users.get("/review/:isbn", async function (req, res) {
 
 //for axios async/await TAsk 10-13
 
-// Get the book list available in the shop
+// Task 10
 public_users.get("/promise", async function (req, res) {
   try {
-    let books = await axios.get(`${URL}`);
-
-    books = books?.data?.books;
-
-    if (!books[0])
-      return res.status(400).json({ message: `Not found any books` });
-
-    return res.status(200).json({
-      message: "Books have been fetched successfully",
-      books,
-    });
+    const response = await axios.get(`${URL}/`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -214,23 +190,12 @@ public_users.get("/promise", async function (req, res) {
   }
 });
 
-// Get book details based on ISBN with promise
+// Task 11
 public_users.get("/promise/isbn/:isbn", async function (req, res) {
-  const { isbn } = req.params;
   try {
-    let filteredBook = await axios.get(`${URL}/isbn/${isbn}`);
-
-    filteredBook = filteredBook?.data?.bookDetails;
-
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with isbn: ${isbn} ` });
-
-    return res.status(200).json({
-      message: `Book has been filtered with isbn: ${isbn}`,
-      bookDetails: filteredBook,
-    });
+    const { isbn } = req.params;
+    const response = await axios.get(`${URL}/isbn/${isbn}`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -239,23 +204,12 @@ public_users.get("/promise/isbn/:isbn", async function (req, res) {
   }
 });
 
-// Get book details based on author
+// Task 12
 public_users.get("/promise/author/:author", async function (req, res) {
-  //Write your code here
-  const { author } = req.params;
   try {
-    let filteredBook = await axios.get(`${URL}/author/${author}`);
-
-    filteredBook = filteredBook?.data?.bookDetails;
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with author: ${author} ` });
-
-    return res.status(200).json({
-      message: `Books have been filtered with author: ${author}`,
-      bookDetails: filteredBook,
-    });
+    const { author } = req.params;
+    const response = await axios.get(`${URL}/author/${author}`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -264,22 +218,12 @@ public_users.get("/promise/author/:author", async function (req, res) {
   }
 });
 
-// Get all books based on title
+// Task 13
 public_users.get("/promise/title/:title", async function (req, res) {
-  const { title } = req.params;
   try {
-    let filteredBook = await axios.get(`${URL}/title/${title}`);
-    filteredBook = filteredBook?.data?.bookDetails;
-
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with title: ${title} ` });
-
-    return res.status(200).json({
-      message: `Books have been filtered with title: ${title}`,
-      bookDetails: filteredBook,
-    });
+    const { title } = req.params;
+    const response = await axios.get(`${URL}/title/${title}`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(500).json({
       message: "Server error",

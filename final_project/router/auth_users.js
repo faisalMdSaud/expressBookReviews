@@ -102,16 +102,14 @@ regd_users.put("/auth/review/:isbn", async (req, res) => {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
-    let message = !book.reviews[userName]
-      ? "Book Review has been added"
-      : "Book Review has been updated";
-
     book.reviews[userName] = review;
 
     const otherBooks = books.filter((book) => book.isbn !== isbn);
     otherBooks.push(book);
 
-    return res.status(300).json({ message: message, book: book });
+    return res
+      .status(300)
+      .json({ message: "Review added/updated successfully" });
   } catch (error) {
     return res.status(500).json({
       message: "Server error",

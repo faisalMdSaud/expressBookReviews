@@ -78,82 +78,82 @@ public_users.post("/register", validateUserData, async (req, res) => {
 });
 
 // Get the book list available in the shop
-public_users.get("/", async function (req, res) {
-  try {
-    let books = await require("./booksdb.js").books;
-    if (!books[0])
-      return res.status(400).json({ message: `Not found any books` });
+// public_users.get("/", async function (req, res) {
+//   try {
+//     let books = await require("./booksdb.js").books;
+//     if (!books[0])
+//       return res.status(400).json({ message: `Not found any books` });
 
-    return res.status(200).json(books);
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-});
+//     return res.status(200).json(books);
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// });
 
-// Get book details based on ISBN
-public_users.get("/isbn/:isbn", async function (req, res) {
-  const { isbn } = req.params;
-  try {
-    const filteredBook = await books.filter((book) => book.isbn === isbn);
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with isbn: ${isbn} ` });
+// // Get book details based on ISBN
+// public_users.get("/isbn/:isbn", async function (req, res) {
+//   const { isbn } = req.params;
+//   try {
+//     const filteredBook = await books.filter((book) => book.isbn === isbn);
+//     if (!filteredBook[0])
+//       return res
+//         .status(400)
+//         .json({ message: `Not found any book with isbn: ${isbn} ` });
 
-    return res.status(200).json(filteredBook);
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-});
+//     return res.status(200).json(filteredBook);
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// });
 
-// Get book details based on author
-public_users.get("/author/:author", async function (req, res) {
-  //Write your code here
-  const { author } = req.params;
-  try {
-    const filteredBook = await books.filter(
-      (book) => book.author.toLowerCase() === author.toLowerCase(),
-    );
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with author: ${author} ` });
+// // Get book details based on author
+// public_users.get("/author/:author", async function (req, res) {
+//   //Write your code here
+//   const { author } = req.params;
+//   try {
+//     const filteredBook = await books.filter(
+//       (book) => book.author.toLowerCase() === author.toLowerCase(),
+//     );
+//     if (!filteredBook[0])
+//       return res
+//         .status(400)
+//         .json({ message: `Not found any book with author: ${author} ` });
 
-    return res.status(200).json(filteredBook);
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-});
+//     return res.status(200).json(filteredBook);
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// });
 
-// Get all books based on title
-public_users.get("/title/:title", async function (req, res) {
-  const { title } = req.params;
-  try {
-    const filteredBook = await books.filter(
-      (book) => book.title.toLowerCase() === title.toLowerCase(),
-    );
-    if (!filteredBook[0])
-      return res
-        .status(400)
-        .json({ message: `Not found any book with title: ${title} ` });
+// // Get all books based on title
+// public_users.get("/title/:title", async function (req, res) {
+//   const { title } = req.params;
+//   try {
+//     const filteredBook = await books.filter(
+//       (book) => book.title.toLowerCase() === title.toLowerCase(),
+//     );
+//     if (!filteredBook[0])
+//       return res
+//         .status(400)
+//         .json({ message: `Not found any book with title: ${title} ` });
 
-    return res.status(200).json(filteredBook);
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
-  }
-});
+//     return res.status(200).json(filteredBook);
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// });
 
 //  Get book review
 public_users.get("/review/:isbn", async function (req, res) {

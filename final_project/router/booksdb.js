@@ -45,7 +45,11 @@ let books = {
     title: "One Thousand and One Nights",
     isbn: "9780140449389",
     reviews: {
+<<<<<<< HEAD
       grace: "A magical collection of stories.",
+=======
+    
+>>>>>>> 6e207a0870aa6136e601df46ef18f0f534a84915
     },
   },
   7: {
@@ -86,7 +90,11 @@ let books = {
 // books = Object.values(books);
 
 const getBookWithIsbn = (isbn) => {
+<<<<<<< HEAD
   books = Object.values(books);
+=======
+    books = Object.values(books);
+>>>>>>> 6e207a0870aa6136e601df46ef18f0f534a84915
   return books.find((book) => book.isbn === isbn);
 };
 

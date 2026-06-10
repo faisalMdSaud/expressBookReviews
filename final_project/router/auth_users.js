@@ -20,6 +20,12 @@ let users = [
     username: "harun",
     password: "123456",
   },
+  {
+    firstName: "John",
+    lastName: "Karim",
+    username: "Jhkrim",
+    password: "123456",
+  },
 ];
 const SECRET_KEY = "hello this is my secret key for jwt";
 
@@ -85,7 +91,7 @@ const reviewValidation = [
     .withMessage("Review must be at least 10 characters"),
 ];
 
-// Add a book review
+// Add/update a book review
 regd_users.put("/auth/review/:isbn", async (req, res) => {
   const { isbn } = req.params;
   const { review } = req.query;
@@ -120,7 +126,6 @@ regd_users.put("/auth/review/:isbn", async (req, res) => {
     });
   }
 });
-
 // Delete book review
 regd_users.delete("/auth/review/:isbn", async (req, res) => {
   try {
